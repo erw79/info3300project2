@@ -1,1 +1,152 @@
+<html>
 
+    <head>
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script src="https://d3js.org/topojson.v3.min.js"></script>
+
+        <style>
+            .nation {
+                  fill: lightgrey;
+                  }
+              
+                  .outline {
+                      fill: none;
+                      stroke: #4a494d;
+                      stroke-width: 1px;
+                   }
+                   .state {
+                        fill: lightgray;  
+                  }     
+
+
+      </style>
+
+    </head>
+
+    <body>
+            <h1>Project 2</h1>
+            <h2>erw79</h2>
+            <p id="problem1">
+                <svg id="USA" height="770" width="990" style="margin:20px"></svg>
+    
+    
+                
+                <script>
+                           
+                    const svg = d3.select("#USA");
+                    const width = svg.attr("width");
+                    const height = svg.attr("height");
+                    const margin = { top: 0, right: 0, bottom: 0, left:0};
+                    const mapWidth = width - margin.left - margin.right;
+                    const mapHeight = height - margin.top - margin.bottom;
+                    const map = svg.append("g")
+                                .attr("transform","translate("+margin.left+","+margin.top+")");
+                      
+    
+                        const requestData = async function() {
+
+                            const us= await d3.json("counties-10m.json")
+                            console.log(us)
+                            var projection = d3.geoAlbersUsa().scale(1300).translate([487.5, 305]);
+                            var path = d3.geoPath().projection(projection);
+                            var nation = topojson.feature(us, us.objects.nation);
+                            var states = topojson.feature(us, us.objects.states);
+                            var statesMesh = topojson.mesh(us, us.objects.states);
+
+
+
+                            hatecrimes= await d3.csv("hate-crimes.csv")
+
+                            var stateDict = {}; 
+
+                            hatecrimes.forEach(d => {
+                            // get the state name from the "series" property
+                            const stateName = d.series.split(" Incidents")[0].toLowerCase();
+                           
+                            // console.log(stateDict)
+
+                            //the dataset gives a total hatecrime count of each month so we have to calculate the monthly average
+                            hatecrimes.forEach(state => { // looping through each state
+                                var monthly_average = 0
+                                var monthly_total = 0
+                                //adding each month in 2022's hatecrime count
+                                monthly_total += Number(state["01-2022"]);
+                                monthly_total += Number(state["02-2022"]);
+                                monthly_total += Number(state["03-2022"]);
+                                monthly_total += Number(state["04-2022"]);
+                                monthly_total += Number(state["05-2022"]);
+                                monthly_total += Number(state["06-2022"]);
+                                monthly_total += Number(state["07-2022"]);
+                                monthly_total += Number(state["08-2022"]);
+                                monthly_total += Number(state["09-2022"]);
+                                monthly_total += Number(state["10-2022"]);
+                                monthly_total += Number(state["11-2022"]);
+                                monthly_total += Number(state["12-2022"]);
+
+
+                            //calculating average
+                                monthly_average = monthly_total/12
+
+                            //saving the 2022 average into the object
+                                state["2022_average"] = monthly_average;
+                                // console.log(stateName)
+                               
+                                // console.log(monthly_average)
+                                stateDict[stateName] = {
+                                "2022_average": d["2022_average"]
+                            };
+                            });
+                            });
+
+
+
+                            //Creating a Quantile scale
+                            const hate = d3.extent(hatecrimes, state => state["2022_average"]);
+                            const colors = ["#ffe0f0", "#ff99cc", "#ff66b2", "#d32d91", "#6a1b9a"];
+
+                            const hateScale = d3.scaleQuantile()
+                                .domain(hate)  
+                                .range(colors); 
+                            console.log(hatecrimes)
+
+                            map.selectAll("path.nation").data(nation.features)
+                                .join("path")
+                                .attr("class", "nation")
+                                .attr("d", path);
+                            
+                            map.selectAll("path.state").data(states.features)
+                                .join("path")
+                                .attr("class","state")
+                                .attr("d",path)
+                            
+                            map.append("path").datum(statesMesh)
+                                .attr("class","outline")
+                                .attr("d", path);
+
+
+                            map.selectAll(".state")
+                                .style("fill", d => {
+                                    // get state name and convert it to lowercase
+                                    const stateName = d.properties.name.toLowerCase();
+                                    
+                                    // look up the state data in stateDict 
+                                    const stateData = stateDict[stateName];
+                                    
+                                    // Return  color scale 
+                                    return stateData ? hateScale(stateData["2022_average"]) : "black";
+                                    // return hateScale(stateData["2022_average"]);
+                                });
+                            };
+
+
+
+                        
+                           requestData()
+                          
+                    
+                          </script>
+                          </p>
+
+    </body>
+
+</html>
