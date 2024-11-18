@@ -1,0 +1,126 @@
+<html>
+
+<head>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://d3js.org/topojson.v3.min.js"></script>
+
+  <style>
+    .nation {
+      fill: lightgrey;
+    }
+
+    .outline {
+      fill: none;
+      stroke: #4a494d;
+      stroke-width: 1px;
+    }
+
+    .state {
+      fill: lightgray;
+    }
+  </style>
+
+</head>
+
+<body>
+  <h1>Project 2</h1>
+  <h2>nto22</h2>
+  <p id="problem1">
+    <svg id="USA" height="770" width="990" style="margin:20px"></svg>
+
+
+
+    <script>
+
+      const svg = d3.select("#USA");
+      const width = svg.attr("width");
+      const height = svg.attr("height");
+      const margin = { top: 0, right: 0, bottom: 0, left: 0 };
+      const mapWidth = width - margin.left - margin.right;
+      const mapHeight = height - margin.top - margin.bottom;
+      const map = svg.append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+      const requestData = async () => {
+
+
+        const us = await d3.json("counties-10m.json")
+        console.log(us)
+        var projection = d3.geoAlbersUsa().scale(1300).translate([487.5, 305]);
+        var path = d3.geoPath().projection(projection);
+        var nation = topojson.feature(us, us.objects.nation);
+        var states = topojson.feature(us, us.objects.states);
+        var statesMesh = topojson.mesh(us, us.objects.states);
+
+
+        var stateDict = {};
+        let vaccines = await d3.csv('./vaccinations.csv');
+        function nameFilter(d, loc) {
+          return d.location !== loc
+        }
+
+        vaccines = vaccines.filter((d) => { return ((d.date) === "2022-12-28") && (d.location !== "American Samoa") && (d.location !== "Bureau of Prisons") && (d.location !== "Dept of Defense") && (d.location !== "Federated States of Micronesia") && (d.location !== "Guam") && (d.location !== "Indian Health Svc") && (d.location !== "Marshall Islands") && (d.location !== "Northern Mariana Islands") && (d.location !== "Puerto Rico") && (d.location !== "Republic of Palau") && (d.location !== "United States") && (d.location !== "Veterans Health") && (d.location !== "Virgin Islands") });
+        console.log(vaccines);
+
+        vaccines.forEach((d) => {
+          d.location = d["location"];
+          if (d.location === "New York State") {
+            d.location = "New York"
+          }
+          d.vperc = parseFloat(d["people_fully_vaccinated_per_hundred"]);
+          stateDict[d.location] = {
+            p: d.vperc
+          }
+        });
+
+        let colors = ["#ffe0f0", "#ff99cc", "#ff66b2", "#d32d91", "#6a1b9a"];
+
+        let percExtent = d3.extent(vaccines, d => d.vperc);
+        const colorScale = d3.scaleQuantile().domain(percExtent).range(colors);
+
+        map.selectAll("path.nation").data(nation.features)
+          .join("path")
+          .attr("class", "nation")
+          .attr("d", path);
+
+        map.selectAll("path.state").data(states.features)
+          .join("path")
+          .attr("class", "state")
+          .attr("d", path)
+
+        map.append("path").datum(statesMesh)
+          .attr("class", "outline")
+          .attr("d", path);
+
+
+        map.selectAll(".state")
+          .style("fill", d => {
+            const stateName = d.properties.name;
+
+            // look up the state data in stateDict 
+            const stateData = stateDict[stateName];
+
+            // Return  color scale 
+            return stateData ? colorScale(stateData.p) : "lightgrey";
+            // return hateScale(stateData["2022_average"]);
+
+
+
+
+
+          })
+      };
+
+
+
+
+      requestData()
+
+
+    </script>
+  </p>
+
+</body>
+
+</html>

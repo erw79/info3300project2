@@ -24,7 +24,7 @@
 
 <body>
     <h1>Project 2</h1>
-    <h2>erw79</h2>
+    <h2>Hate Crimes across the US - 2022</h2>
     <p id="problem1">
         <svg id="USA" height="770" width="990" style="margin:20px"></svg>
 
@@ -41,19 +41,10 @@
             const map = svg.append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-            const USStates = [
-                "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Georgia",
-                "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland",
-                "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
-                "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
-                "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
-                "West Virginia", "Wisconsin", "Wyoming"
-            ];
-
 
             const requestData = async function () {
 
-                const us = await d3.json("counties-10m.json");
+                const us = await d3.json("counties-10m.json")
                 console.log(us)
                 var projection = d3.geoAlbersUsa().scale(1300).translate([487.5, 305]);
                 var path = d3.geoPath().projection(projection);
