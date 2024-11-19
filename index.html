@@ -32,7 +32,7 @@
 
 
         <script>
-
+            //creating svg
             const svg = d3.select("#USA");
             const width = svg.attr("width");
             const height = svg.attr("height");
@@ -42,6 +42,7 @@
             const map = svg.append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+            //Creating an array of all US States for later use
             const USStates = [
                 "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
                 "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana",
@@ -50,10 +51,12 @@
                 "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee",
                 "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
             ];
-            const requestData = async function () {
 
+            const requestData = async function () {
+                //importing the topojson file 
+                //Source: Class notes / github repository
                 const us = await d3.json("counties-10m.json")
-                console.log(us)
+                // console.log(us)
                 var projection = d3.geoAlbersUsa().scale(1300).translate([487.5, 305]);
                 var path = d3.geoPath().projection(projection);
                 var nation = topojson.feature(us, us.objects.nation);
@@ -61,9 +64,7 @@
                 var statesMesh = topojson.mesh(us, us.objects.states);
 
 
-                //datat filtering 
-                hatecrimes = await d3.csv("hate-crimes.csv");
-
+                //Importing data and filtering
                 let unemploymentData = await d3.csv("Unemployment in America Per US State.csv");
                 unemploymentData = unemploymentData.filter(function (d) {
                     return d.Year === "2022";
@@ -73,10 +74,9 @@
                 let vaccines = await d3.csv('./vaccinations.csv');
                 vaccines = vaccines.filter((d) => { return ((d.date) === "2022-12-28") && (d.location !== "American Samoa") && (d.location !== "Bureau of Prisons") && (d.location !== "Dept of Defense") && (d.location !== "Federated States of Micronesia") && (d.location !== "Guam") && (d.location !== "Indian Health Svc") && (d.location !== "Marshall Islands") && (d.location !== "Northern Mariana Islands") && (d.location !== "Puerto Rico") && (d.location !== "Republic of Palau") && (d.location !== "United States") && (d.location !== "Veterans Health") && (d.location !== "Virgin Islands") });
                 console.log(vaccines);
+                
+                // creating empty dictionaries
                 var vstateDict = {};
-
-
-
                 var unemploymentstateDict = {};
 
                 unemploymentData.forEach(function (d) {
@@ -107,6 +107,7 @@
                     .range(["#fff", "#d1e8ed", "#adc2da", "#8879b3", "#762b80"]);
                 var stateDict = {};
 
+                hatecrimes = await d3.csv("hate-crimes.csv");
                 hatecrimes.forEach(d => {
                     // get the state name from the "series" property
                     const stateName = d.series.split(" Incidents")[0].toLowerCase();
@@ -152,7 +153,8 @@
 
                 //Creating a Quantile scale
                 const hate = d3.extent(hatecrimes, state => state["2022_average"]);
-                const colors = ["#ffe0f0", "#ff99cc", "#ff66b2", "#d32d91", "#6a1b9a"];
+                const colors = ["#f3dbd8", "#e7b6b1", "#cb6155", "#9f3b30", "#5a2d52"];
+
 
                 const hateScale = d3.scaleQuantile()
                     .domain(hate)
@@ -199,7 +201,7 @@
                     .attr("class", "outline")
                     .attr("d", path);
 
-
+                //Rendering default map - hate crimes
                 map.selectAll(".state")
                     .style("fill", d => {
                         // get state name and convert it to lowercase
@@ -212,6 +214,9 @@
                         return stateData ? hateScale(stateData["2022_average"]) : "black";
                         // return hateScale(stateData["2022_average"]);
                     });
+                    createHateCrimeLegend();
+                
+                // Drop down and Function to update graph
                 let currentDataset = 'hatecrimes';
                 const dropdown = d3.select('body').append('select')
                     .attr('id', 'datasetSelect')
@@ -250,7 +255,8 @@
                                 return stateData ? hateScale(stateData["2022_average"]) : "black";
                                 // return hateScale(stateData["2022_average"]);
 
-                            });
+                            })
+                            createHateCrimeLegend();
                     } else if (currentDataset === 'unemployment') {
                         map.selectAll(".state")
                             .style("fill", d => {
@@ -358,6 +364,52 @@
                     vcolorScale.range().forEach((color, i) => {
                         gradient.append("stop")
                             .attr("offset", `${(i / (vcolorScale.range().length - 1)) * 100}%`)
+                            .attr("stop-color", color);
+                    });
+
+                    legend.append("rect")
+                        .attr("x", 500)
+                        .attr("y", 700)
+                        .attr("width", legendWidth)
+                        .attr("height", legendHeight)
+                        .style("fill", "url(#vaccine-gradient)");
+
+                    legend.append("text")
+                        .attr("x", 480)
+                        .attr("y", 700 + 10)
+                        .attr("dy", ".35em")
+                        .style("text-anchor", "start")
+                        .text(vmin + "%");
+
+                    legend.append("text")
+                        .attr("x", 500 + legendWidth + 40)
+                        .attr("y", 700 + 10)
+                        .attr("dy", ".35em")
+                        .style("text-anchor", "end")
+                        .text(vmax + "%");
+                }
+
+                    function createHateCrimeLegend() {
+                    const legendWidth = 300;
+                    const legendHeight = 20;
+                    const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+
+
+                    const legend = svg.append("g")
+                        .attr("class", "legend")
+                        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                    const gradient = legend.append("defs")
+                        .append("linearGradient")
+                        .attr("id", "vaccine-gradient")
+                        .attr("x1", "0%")
+                        .attr("x2", "100%")
+                        .attr("y1", "0%")
+                        .attr("y2", "0%");
+
+                    hateScale.range().forEach((color, i) => {
+                        gradient.append("stop")
+                            .attr("offset", `${(i / (hateScale.range().length - 1)) * 100}%`)
                             .attr("stop-color", color);
                     });
 
