@@ -153,6 +153,7 @@
 
                 //Creating a Quantile scale
                 const hate = d3.extent(hatecrimes, state => state["2022_average"]);
+                let [hmin, hmax] = hate;
                 const colors = ["#f3dbd8", "#e7b6b1", "#cb6155", "#9f3b30", "#5a2d52"];
 
 
@@ -421,18 +422,18 @@
                         .style("fill", "url(#vaccine-gradient)");
 
                     legend.append("text")
-                        .attr("x", 480)
+                        .attr("x", 415)
                         .attr("y", 700 + 10)
                         .attr("dy", ".35em")
                         .style("text-anchor", "start")
-                        .text(vmin + "%");
+                        .text(hmin + " incidents");
 
                     legend.append("text")
-                        .attr("x", 500 + legendWidth + 40)
+                        .attr("x", 500 + legendWidth + 100)
                         .attr("y", 700 + 10)
                         .attr("dy", ".35em")
                         .style("text-anchor", "end")
-                        .text(vmax + "%");
+                        .text(hmax.toFixed(2) + " incidents");
                 }
 
             };
