@@ -18,17 +18,33 @@
         .state {
             fill: lightgray;
         }
+
+        #graphtitile{
+            text-align: center;
+            margin: 0 auto;
+        }
+        #USA {
+            border: 2px solid black;
+            display: block; 
+            margin: 0 auto; 
+            background-color: #f0e6ce;
+        }
+        html{
+            background-color: #4d5a90;
+            color:white;
+        }
     </style>
 
 </head>
 
 <body>
-    <h1>Project 2</h1>
-    <h2>Hate Crimes across the US - 2022</h2>
-    <h3>*blacked out states = data unavailable</h3>
+    <h3>Project 2 - kjz8, erw79, akk89, nto22 </h3>
+    <h2 style="font-size: 35px;">The Year 2022- A look into Post-Covid America for each state.</h2>
+    <h4>After the final grand peak in late 2021, 2022 marked the first year Covid-19 was under control in the US.</h4>
+    <h4>Use the following map to examine what this important year looked across the US for a variety of issues.</h4>
+    <h3 id="graphtitle" style="text-align: center; width: 100%; font-size: 25px;color: #ffe395;">Average Number of Hate Crimes across the US Per Month</h3>
     <p id="problem1">
-        <svg id="USA" height="770" width="990" style="margin:20px"></svg>
-
+        <svg id="USA" height="790" width="980" style="margin:20px auto"></svg>
 
 
         <script>
@@ -106,7 +122,9 @@
                     .domain(UminMax)
                     .range(["#fff", "#d1e8ed", "#adc2da", "#8879b3", "#762b80"]);
                 var stateDict = {};
-
+                
+                
+                //import hatecrimes data
                 hatecrimes = await d3.csv("hate-crimes.csv");
                 hatecrimes.forEach(d => {
                     // get the state name from the "series" property
@@ -186,8 +204,7 @@
 
 
 
-
-
+                //creating the map
                 map.selectAll("path.nation").data(nation.features)
                     .join("path")
                     .attr("class", "nation")
@@ -445,6 +462,7 @@
 
 
         </script>
+        <h4>*blacked out states = data unavailable</h4>
     </p>
 
 </body>
