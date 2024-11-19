@@ -54,11 +54,9 @@
         var statesMesh = topojson.mesh(us, us.objects.states);
 
 
-        var stateDict = {};
+        var vstateDict = {};
         let vaccines = await d3.csv('./vaccinations.csv');
-        function nameFilter(d, loc) {
-          return d.location !== loc
-        }
+
 
         vaccines = vaccines.filter((d) => { return ((d.date) === "2022-12-28") && (d.location !== "American Samoa") && (d.location !== "Bureau of Prisons") && (d.location !== "Dept of Defense") && (d.location !== "Federated States of Micronesia") && (d.location !== "Guam") && (d.location !== "Indian Health Svc") && (d.location !== "Marshall Islands") && (d.location !== "Northern Mariana Islands") && (d.location !== "Puerto Rico") && (d.location !== "Republic of Palau") && (d.location !== "United States") && (d.location !== "Veterans Health") && (d.location !== "Virgin Islands") });
         console.log(vaccines);
@@ -69,15 +67,15 @@
             d.location = "New York"
           }
           d.vperc = parseFloat(d["people_fully_vaccinated_per_hundred"]);
-          stateDict[d.location] = {
+          vstateDict[d.location] = {
             p: d.vperc
           }
         });
 
-        let colors = ["#ffe0f0", "#ff99cc", "#ff66b2", "#d32d91", "#6a1b9a"];
+        let vcolors = ["#ffe0f0", "#ff99cc", "#ff66b2", "#d32d91", "#6a1b9a"];
 
         let percExtent = d3.extent(vaccines, d => d.vperc);
-        const colorScale = d3.scaleQuantile().domain(percExtent).range(colors);
+        const vcolorScale = d3.scaleQuantile().domain(percExtent).range(vcolors);
 
         map.selectAll("path.nation").data(nation.features)
           .join("path")
@@ -98,11 +96,11 @@
           .style("fill", d => {
             const stateName = d.properties.name;
 
-            // look up the state data in stateDict 
-            const stateData = stateDict[stateName];
+            // look up the state data in vstateDict 
+            const stateData = vstateDict[stateName];
 
             // Return  color scale 
-            return stateData ? colorScale(stateData.p) : "lightgrey";
+            return stateData ? vcolorScale(stateData.p) : "lightgrey";
             // return hateScale(stateData["2022_average"]);
 
 

@@ -25,6 +25,7 @@
 <body>
     <h1>Project 2</h1>
     <h2>Hate Crimes across the US - 2022</h2>
+    <h3>*blacked out states = data unavailable</h3>
     <p id="problem1">
         <svg id="USA" height="770" width="990" style="margin:20px"></svg>
 
@@ -60,14 +61,22 @@
                 var statesMesh = topojson.mesh(us, us.objects.states);
 
 
-
+                //datat filtering 
                 hatecrimes = await d3.csv("hate-crimes.csv");
+
                 let unemploymentData = await d3.csv("Unemployment in America Per US State.csv");
                 unemploymentData = unemploymentData.filter(function (d) {
                     return d.Year === "2022";
                 });
-
                 console.log(unemploymentData);
+
+                let vaccines = await d3.csv('./vaccinations.csv');
+                vaccines = vaccines.filter((d) => { return ((d.date) === "2022-12-28") && (d.location !== "American Samoa") && (d.location !== "Bureau of Prisons") && (d.location !== "Dept of Defense") && (d.location !== "Federated States of Micronesia") && (d.location !== "Guam") && (d.location !== "Indian Health Svc") && (d.location !== "Marshall Islands") && (d.location !== "Northern Mariana Islands") && (d.location !== "Puerto Rico") && (d.location !== "Republic of Palau") && (d.location !== "United States") && (d.location !== "Veterans Health") && (d.location !== "Virgin Islands") });
+                console.log(vaccines);
+                var vstateDict = {};
+
+
+
                 var unemploymentstateDict = {};
 
                 unemploymentData.forEach(function (d) {
@@ -140,6 +149,7 @@
 
 
 
+
                 //Creating a Quantile scale
                 const hate = d3.extent(hatecrimes, state => state["2022_average"]);
                 const colors = ["#ffe0f0", "#ff99cc", "#ff66b2", "#d32d91", "#6a1b9a"];
@@ -148,6 +158,32 @@
                     .domain(hate)
                     .range(colors);
                 console.log(hatecrimes)
+
+
+                //vaccine implementation
+                vaccines.forEach((d) => {
+                    d.location = d["location"];
+                    if (d.location === "New York State") {
+                        d.location = "New York"
+                    }
+                    d.vperc = parseFloat(d["people_fully_vaccinated_per_hundred"]);
+                    vstateDict[d.location] = {
+                        p: d.vperc
+                    }
+                });
+
+                let vcolors = ["#a9ffcb", "#b6eea6", "#c0b298", "#a4778b", "#aa4586"];
+
+                let percExtent = d3.extent(vaccines, d => d.vperc);
+                const vcolorScale = d3.scaleQuantile().domain(percExtent).range(vcolors);
+                let [vmin, vmax] = percExtent;
+                // console.log("vmin: ", vmin);
+                // console.log("vmax: ", vmax);
+                console.log(vstateDict);
+
+
+
+
 
                 map.selectAll("path.nation").data(nation.features)
                     .join("path")
@@ -188,18 +224,20 @@
                     });
                 dropdown.selectAll('option')
                     .data([
-                        { value: 'massShootings', label: 'Mass Shootings' },
+                        { value: 'hatecrimes', label: 'Hate Crimes' },
                         { value: 'unemployment', label: 'Unemployment' },
-                        { value: 'covidVaccinations', label: 'COVID-19 Vaccinations' },
-                        { value: 'hatecrimes', label: 'Hate Crimes' }
+                        { value: 'vaccines', label: 'COVID-19 Vaccinations' },
+                        { value: 'massShootings', label: 'Mass Shootings' }
+
                     ])
                     .enter().append('option')
                     .attr('value', d => d.value)
                     .text(d => d.label);
 
                 function updateMap(currentDataset) {
-
+                    svg.selectAll(".legend").remove();
                     if (currentDataset === 'hatecrimes') {
+                        console.log("current set: ", currentDataset);
                         map.selectAll(".state")
                             .style("fill", d => {
                                 // get state name and convert it to lowercase
@@ -221,10 +259,30 @@
                                 const unemploymentPercent = unemploymentstateDict[stnm]?.averageUnemployment;
                                 console.log(unemploymentPercent);
 
-                                return unemploymentPercent !== undefined ? UcolorScale(unemploymentPercent) : "#ccc";
+                                return unemploymentPercent !== undefined ? UcolorScale(unemploymentPercent) : "black";
                             });
                         createUnemploymentLegend();
-                    } else {
+                    }
+                    else if (currentDataset === 'vaccines') {
+                        map.selectAll(".state")
+                            .style("fill", d => {
+                                const vstateName = d.properties.name;
+
+                                // look up the state data in vstateDict 
+                                const vstateData = vstateDict[vstateName];
+
+                                // Return  color scale 
+                                if (isNaN(vstateData?.p)) {
+                                    return "black"; // Use black for states with NaN or missing data
+                                }
+                                return vcolorScale(vstateData.p);
+                                // return vstateData ? vcolorScale(vstateData.p) : "black";
+
+                            })
+                        createVaccineLegend();
+
+                    }
+                    else {
 
                         return;
                     }
@@ -232,6 +290,7 @@
 
                     ;
                 }
+                //legends
                 function createUnemploymentLegend() {
                     const legendWidth = 300;
                     const legendHeight = 20;
@@ -239,6 +298,7 @@
 
 
                     const legend = svg.append("g")
+                        .attr("class", "legend")
                         .attr("transform", `translate(${margin.left},${margin.top})`);
 
                     const gradient = legend.append("defs")
@@ -275,6 +335,52 @@
                         .attr("dy", ".35em")
                         .style("text-anchor", "end")
                         .text("64.3%");
+                }
+
+                function createVaccineLegend() {
+                    const legendWidth = 300;
+                    const legendHeight = 20;
+                    const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+
+
+                    const legend = svg.append("g")
+                        .attr("class", "legend")
+                        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                    const gradient = legend.append("defs")
+                        .append("linearGradient")
+                        .attr("id", "vaccine-gradient")
+                        .attr("x1", "0%")
+                        .attr("x2", "100%")
+                        .attr("y1", "0%")
+                        .attr("y2", "0%");
+
+                    vcolorScale.range().forEach((color, i) => {
+                        gradient.append("stop")
+                            .attr("offset", `${(i / (vcolorScale.range().length - 1)) * 100}%`)
+                            .attr("stop-color", color);
+                    });
+
+                    legend.append("rect")
+                        .attr("x", 500)
+                        .attr("y", 700)
+                        .attr("width", legendWidth)
+                        .attr("height", legendHeight)
+                        .style("fill", "url(#vaccine-gradient)");
+
+                    legend.append("text")
+                        .attr("x", 480)
+                        .attr("y", 700 + 10)
+                        .attr("dy", ".35em")
+                        .style("text-anchor", "start")
+                        .text(vmin + "%");
+
+                    legend.append("text")
+                        .attr("x", 500 + legendWidth + 40)
+                        .attr("y", 700 + 10)
+                        .attr("dy", ".35em")
+                        .style("text-anchor", "end")
+                        .text(vmax + "%");
                 }
 
             };
