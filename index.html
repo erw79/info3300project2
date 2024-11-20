@@ -24,6 +24,7 @@
             margin: 0 auto;
         }
 
+
         #USA {
             border: 2px solid black;
             display: block;
@@ -33,6 +34,7 @@
 
         html {
             background-color: #4d5a90;
+            color: white;
             color: white;
         }
     </style>
@@ -118,7 +120,7 @@
                     return d.Year === "2022";
                 });
                 // console.log(unemploymentData);
-
+                //importing vaccine data and filtering to get the final available values of the year
                 let vaccines = await d3.csv('./vaccinations.csv');
                 vaccines = vaccines.filter((d) => { return ((d.date) === "2022-12-28") && (d.location !== "American Samoa") && (d.location !== "Bureau of Prisons") && (d.location !== "Dept of Defense") && (d.location !== "Federated States of Micronesia") && (d.location !== "Guam") && (d.location !== "Indian Health Svc") && (d.location !== "Marshall Islands") && (d.location !== "Northern Mariana Islands") && (d.location !== "Puerto Rico") && (d.location !== "Republic of Palau") && (d.location !== "United States") && (d.location !== "Veterans Health") && (d.location !== "Virgin Islands") });
                 // console.log(vaccines);
@@ -215,7 +217,7 @@
                     .range([d3.interpolateReds(0), d3.interpolateReds(1)]);
 
 
-                //vaccine implementation
+                //vaccine- creating properties, scales, and a mapping from locaton to value
                 vaccines.forEach((d) => {
                     d.location = d["location"];
                     if (d.location === "New York State") {
