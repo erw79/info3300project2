@@ -19,19 +19,21 @@
             fill: lightgray;
         }
 
-        #graphtitile{
+        #graphtitile {
             text-align: center;
             margin: 0 auto;
         }
+
         #USA {
             border: 2px solid black;
-            display: block; 
-            margin: 0 auto; 
+            display: block;
+            margin: 0 auto;
             background-color: #f0e6ce;
         }
-        html{
+
+        html {
             background-color: #4d5a90;
-            color:white;
+            color: white;
         }
     </style>
 
@@ -42,7 +44,8 @@
     <h2 style="font-size: 35px;">The Year 2022- A look into Post-Covid America for each state.</h2>
     <h4>After the final grand peak in late 2021, 2022 marked the first year Covid-19 was under control in the US.</h4>
     <h4>Use the following map to examine what this important year looked across the US for a variety of issues.</h4>
-    <h3 id="graphtitle" style="text-align: center; width: 100%; font-size: 25px;color: #ffe395;"> Hate Crime Incidents per 1 million people</h3>
+    <h3 id="graphtitle" style="text-align: center; width: 100%; font-size: 25px;color: #ffe395;"> Hate Crime Incidents
+        per 1 million people</h3>
     <p id="problem1">
         <svg id="USA" height="790" width="980" style="margin:20px auto"></svg>
 
@@ -86,11 +89,11 @@
                     return d.Year === "2022";
                 });
                 // console.log(unemploymentData);
-
+                //importing vaccine data and filtering to get the final available values of the year
                 let vaccines = await d3.csv('./vaccinations.csv');
                 vaccines = vaccines.filter((d) => { return ((d.date) === "2022-12-28") && (d.location !== "American Samoa") && (d.location !== "Bureau of Prisons") && (d.location !== "Dept of Defense") && (d.location !== "Federated States of Micronesia") && (d.location !== "Guam") && (d.location !== "Indian Health Svc") && (d.location !== "Marshall Islands") && (d.location !== "Northern Mariana Islands") && (d.location !== "Puerto Rico") && (d.location !== "Republic of Palau") && (d.location !== "United States") && (d.location !== "Veterans Health") && (d.location !== "Virgin Islands") });
                 // console.log(vaccines);
-                
+
                 // creating empty dictionaries
                 var vstateDict = {};
                 var unemploymentstateDict = {};
@@ -124,7 +127,7 @@
 
 
                 var stateDict = {};
-                
+
                 //import hatecrimes data
                 hatecrimes = await d3.csv("hate-crimes.csv");
                 state_pop = await d3.csv("state-pop.csv");
@@ -133,8 +136,8 @@
                 const statePopDict = {};
                 state_pop.forEach(d => {
                     //clean data then store it
-                    const stateName = d["Geographic Area"].replace('.', '').toLowerCase(); 
-                    const population = parseInt(d["2022"].replace(/,/g, ""), 10); 
+                    const stateName = d["Geographic Area"].replace('.', '').toLowerCase();
+                    const population = parseInt(d["2022"].replace(/,/g, ""), 10);
                     statePopDict[stateName] = population;
                 });
                 hatecrimes.forEach(state => {
@@ -142,26 +145,26 @@
                     const stateName = state.series.split(" Incidents")[0].toLowerCase();
 
                     //the dataset gives a total hatecrime count of each month so we have to calculate the monthly average
-                        var monthly_average = 0
-                        var monthly_total = 0
-                        //adding each month in 2022's hatecrime count
-                        monthly_total += Number(state["01-2022"]);
-                        monthly_total += Number(state["02-2022"]);
-                        monthly_total += Number(state["03-2022"]);
-                        monthly_total += Number(state["04-2022"]);
-                        monthly_total += Number(state["05-2022"]);
-                        monthly_total += Number(state["06-2022"]);
-                        monthly_total += Number(state["07-2022"]);
-                        monthly_total += Number(state["08-2022"]);
-                        monthly_total += Number(state["09-2022"]);
-                        monthly_total += Number(state["10-2022"]);
-                        monthly_total += Number(state["11-2022"]);
-                        monthly_total += Number(state["12-2022"]);
+                    var monthly_average = 0
+                    var monthly_total = 0
+                    //adding each month in 2022's hatecrime count
+                    monthly_total += Number(state["01-2022"]);
+                    monthly_total += Number(state["02-2022"]);
+                    monthly_total += Number(state["03-2022"]);
+                    monthly_total += Number(state["04-2022"]);
+                    monthly_total += Number(state["05-2022"]);
+                    monthly_total += Number(state["06-2022"]);
+                    monthly_total += Number(state["07-2022"]);
+                    monthly_total += Number(state["08-2022"]);
+                    monthly_total += Number(state["09-2022"]);
+                    monthly_total += Number(state["10-2022"]);
+                    monthly_total += Number(state["11-2022"]);
+                    monthly_total += Number(state["12-2022"]);
 
-                        //finding per capita rate
-                        if (statePopDict[stateName]) {
-                            const population = statePopDict[stateName];
-                            const hatePer100k = (monthly_total / population) * 1000000;
+                    //finding per capita rate
+                    if (statePopDict[stateName]) {
+                        const population = statePopDict[stateName];
+                        const hatePer100k = (monthly_total / population) * 1000000;
 
                         //Adding the total to the stateDict
                         stateDict[stateName] = {
@@ -169,9 +172,9 @@
                         };
 
                     }
-                    });
-                    // console.log(stateDict)
-        
+                });
+                // console.log(stateDict)
+
 
 
                 //Creating a Quantile scale
@@ -183,7 +186,7 @@
                     .range([d3.interpolateReds(0), d3.interpolateReds(1)]);
 
 
-                //vaccine implementation
+                //vaccine- creating properties, scales, and a mapping from locaton to value
                 vaccines.forEach((d) => {
                     d.location = d["location"];
                     if (d.location === "New York State") {
@@ -234,8 +237,8 @@
                         return stateData ? hateScale(stateData["2022_total"]) : "black";
                         // return hateScale(stateData["2022_average"]);
                     });
-                    createHateCrimeLegend();
-                
+                createHateCrimeLegend();
+
                 // Drop down and Function to update graph
                 let currentDataset = 'hatecrimes';
                 const dropdown = d3.select('body').append('select')
@@ -276,7 +279,7 @@
                                 // return hateScale(stateData["2022_average"]);
 
                             })
-                            createHateCrimeLegend();
+                        createHateCrimeLegend();
                     } else if (currentDataset === 'unemployment') {
                         map.selectAll(".state")
                             .style("fill", d => {
@@ -409,7 +412,7 @@
                         .text(vmax + "%");
                 }
 
-                    function createHateCrimeLegend() {
+                function createHateCrimeLegend() {
                     const legendWidth = 300;
                     const legendHeight = 20;
                     const margin = { top: 20, right: 20, bottom: 20, left: 20 };
@@ -464,7 +467,7 @@
 
 
         </script>
-        <h4>*blacked out states = data unavailable</h4>
+    <h4>*blacked out states = data unavailable</h4>
     </p>
 
 </body>
